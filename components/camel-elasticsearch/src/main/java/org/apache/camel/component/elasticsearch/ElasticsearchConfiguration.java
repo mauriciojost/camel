@@ -24,6 +24,8 @@ import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
 import org.apache.camel.spi.UriPath;
+import org.elasticsearch.action.WriteConsistencyLevel;
+import org.elasticsearch.action.support.replication.ReplicationType;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 
@@ -44,11 +46,15 @@ public class ElasticsearchConfiguration {
     public static final String PARAM_DATA = "data";
     public static final String PARAM_INDEX_NAME = "indexName";
     public static final String PARAM_INDEX_TYPE = "indexType";
+    public static final String PARAM_CONSISTENCY_LEVEL = "consistencyLevel";
+    public static final String PARAM_REPLICATION_TYPE = "replicationType";
     public static final String PROTOCOL = "elasticsearch";
     private static final String LOCAL_NAME = "local";
     private static final String IP = "ip";
     private static final String PORT = "port";
     private static final Integer DEFAULT_PORT = 9300;
+    private static final WriteConsistencyLevel DEFAULT_CONSISTENCY_LEVEL = WriteConsistencyLevel.DEFAULT;
+    private static final ReplicationType DEFAULT_REPLICATION_TYPE = ReplicationType.DEFAULT;
 
     private URI uri;
     @UriPath(description = "Name of cluster or use local for local mode") @Metadata(required = "true")
@@ -61,6 +67,10 @@ public class ElasticsearchConfiguration {
     private String indexName;
     @UriParam
     private String indexType;
+    @UriParam
+    private WriteConsistencyLevel consistencyLevel;
+    @UriParam
+    private ReplicationType replicationType;
     @UriParam
     private boolean local;
     @UriParam
@@ -106,9 +116,29 @@ public class ElasticsearchConfiguration {
         indexName = (String)parameters.remove(PARAM_INDEX_NAME);
         indexType = (String)parameters.remove(PARAM_INDEX_TYPE);
         operation = (String)parameters.remove(PARAM_OPERATION);
+        consistencyLevel = parseConsistencyLevel(parameters);
+        replicationType = parseReplicationType(parameters);
+
         ip = (String)parameters.remove(IP);
+
         String portParam = (String) parameters.remove(PORT);
         port = portParam == null ? DEFAULT_PORT : Integer.valueOf(portParam);
+    }
+
+    private ReplicationType parseReplicationType(Map<String, Object> parameters) {
+        Object replicationTypeParam  = parameters.remove(PARAM_REPLICATION_TYPE);
+        if (replicationTypeParam != null)
+            return ReplicationType.valueOf(replicationTypeParam.toString());
+        else
+            return DEFAULT_REPLICATION_TYPE;
+    }
+
+    private WriteConsistencyLevel parseConsistencyLevel(Map<String, Object> parameters) {
+        Object consistencyLevelParam = parameters.remove(PARAM_CONSISTENCY_LEVEL);
+        if (consistencyLevelParam != null)
+            return WriteConsistencyLevel.valueOf(consistencyLevelParam.toString());
+        else
+            return DEFAULT_CONSISTENCY_LEVEL;
     }
 
     protected Boolean toBoolean(Object string) {
@@ -223,6 +253,22 @@ public class ElasticsearchConfiguration {
 
     public void setPort(Integer port) {
         this.port = port;
+    }
+
+    public void setConsistencyLevel(WriteConsistencyLevel consistencyLevel) {
+        this.consistencyLevel = consistencyLevel;
+    }
+
+    public WriteConsistencyLevel getConsistencyLevel() {
+        return consistencyLevel;
+    }
+
+    public void setReplicationType(ReplicationType replicationType) {
+        this.replicationType = replicationType;
+    }
+
+    public ReplicationType getReplicationType() {
+        return replicationType;
     }
 
 }

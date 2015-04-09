@@ -87,6 +87,7 @@ public class ElasticsearchEndpoint extends DefaultEndpoint {
                     .build();
             Client client = new TransportClient(settings)
                     .addTransportAddress(new InetSocketTransportAddress(configuration.getIp(), configuration.getPort()));
+            // FIXME add more addresses
             this.client = client;
         } else {
             node = configuration.buildNode();
